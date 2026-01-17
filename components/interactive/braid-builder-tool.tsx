@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use client';
 
 import { useState } from 'react';
@@ -234,8 +236,8 @@ export function BraidBuilderTool() {
                 {result && (
                     <div
                         className={`p-4 rounded-lg border ${result.error
-                                ? 'bg-red-950/20 border-red-500/30'
-                                : 'bg-green-950/20 border-green-500/30'
+                            ? 'bg-red-950/20 border-red-500/30'
+                            : 'bg-green-950/20 border-green-500/30'
                             }`}
                     >
                         {result.error ? (

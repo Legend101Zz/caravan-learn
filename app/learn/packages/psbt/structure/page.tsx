@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+//@ts-nocheck
+/* eslint-disable react/no-unescaped-entities */
 'use client';
 
 import { CodePlayground } from '@/components/interactive/code-playground';

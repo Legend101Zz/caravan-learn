@@ -9,6 +9,7 @@ import { AlertCircle, FileText, Eye, Copy, Check } from 'lucide-react';
 export function PSBTDecoderTool() {
     const [psbtBase64, setPsbtBase64] = useState('');
     const [result, setResult] = useState<{
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         decoded?: any;
         error?: string;
     } | null>(null);
@@ -105,8 +106,8 @@ export function PSBTDecoderTool() {
                 {result && (
                     <div
                         className={`p-4 rounded-lg border ${result.error
-                                ? 'bg-red-950/20 border-red-500/30'
-                                : 'bg-green-950/20 border-green-500/30'
+                            ? 'bg-red-950/20 border-red-500/30'
+                            : 'bg-green-950/20 border-green-500/30'
                             }`}
                     >
                         {result.error ? (
@@ -161,7 +162,7 @@ export function PSBTDecoderTool() {
                                         {/* Info Box */}
                                         <div className="mt-4 p-3 bg-blue-950/20 border border-blue-500/30 rounded">
                                             <div className="text-xs text-blue-300">
-                                                <strong>💡 What you're seeing:</strong> This is the internal structure
+                                                <strong>💡 What you&apos;re seeing:</strong> This is the internal structure
                                                 of the PSBT. It contains all the information needed to sign and broadcast
                                                 the transaction.
                                             </div>
