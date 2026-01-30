@@ -315,8 +315,8 @@ const addressType: MultisigAddressType = "P2WSH";`}</code>
 
             <div className="not-prose my-8 grid md:grid-cols-2 gap-4">
                 <Button asChild size="lg" variant="outline">
-                    <Link href="/learn/packages/bitcoin/networks">
-                        Explore Networks
+                    <Link href="/learn/packages/bitcoin/braid">
+                        Explore Braids
                         <ArrowRight size={20} />
                     </Link>
                 </Button>

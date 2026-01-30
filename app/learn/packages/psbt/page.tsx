@@ -3,623 +3,773 @@
 /* eslint-disable react/no-unescaped-entities */
 'use client';
 
-import { CodePlayground } from '@/components/interactive/code-playground';
-import { Callout } from '@/components/content/callout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { PageNavigation } from '@/components/layout/page-navigation';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowRight, FileText, Users, Lock, Layers } from 'lucide-react';
-import * as CaravanPSBT from '@caravan/psbt';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Callout } from '@/components/content/callout';
+import { PageNavigation } from '@/components/layout/page-navigation';
+import {
+    ArrowRight,
+    Users,
+    FileText,
+    Shield,
+    Laptop,
+    Smartphone,
+    HardDrive,
+    CheckCircle2,
+    XCircle,
+    Layers,
+    Send,
+    Lock,
+    Unlock,
+    Zap,
+    RefreshCw,
+    Eye,
+    PenTool,
+    Merge,
+    Package
+} from 'lucide-react';
 
-export default function PSBTPackagePage() {
+// Hand-drawn style underline
+const DoodleUnderline = () => (
+    <svg className="absolute -bottom-2 left-0 w-full h-3" viewBox="0 0 200 12" preserveAspectRatio="none">
+        <motion.path
+            d="M0 8 Q 50 2, 100 8 T 200 8"
+            stroke="#E8813B"
+            strokeWidth="3"
+            fill="none"
+            strokeLinecap="round"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 1, delay: 0.5 }}
+        />
+    </svg>
+);
+
+// Animated data packet
+const DataPacket = ({
+    delay = 0,
+    fromX,
+    toX,
+    y,
+    color = "#E8813B",
+    label
+}: {
+    delay?: number;
+    fromX: number;
+    toX: number;
+    y: number;
+    color?: string;
+    label?: string;
+}) => (
+    <motion.g
+        initial={{ x: fromX, opacity: 0 }}
+        animate={{
+            x: [fromX, toX],
+            opacity: [0, 1, 1, 0]
+        }}
+        transition={{
+            duration: 3,
+            delay,
+            repeat: Infinity,
+            repeatDelay: 2,
+            ease: "easeInOut"
+        }}
+    >
+        <rect
+            x={0}
+            y={y - 10}
+            width={40}
+            height={20}
+            rx={4}
+            fill={color}
+            opacity={0.9}
+        />
+        <text
+            x={20}
+            y={y + 4}
+            textAnchor="middle"
+            fill="white"
+            fontSize="8"
+            fontWeight="bold"
+        >
+            {label || "PSBT"}
+        </text>
+    </motion.g>
+);
+
+// The Problem Visualization - Before PSBT
+const BeforePSBTVisualization = () => {
+    const [step, setStep] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setStep(s => (s + 1) % 5);
+        }, 2500);
+        return () => clearInterval(interval);
+    }, []);
+
+    const participants = [
+        { name: "Alice", x: 80, y: 60, icon: Laptop },
+        { name: "Bob", x: 300, y: 60, icon: HardDrive },
+        { name: "Carol", x: 190, y: 180, icon: Smartphone }
+    ];
+
+    const messages = [
+        { from: 0, to: 1, label: "raw tx?", step: 0 },
+        { from: 1, to: 0, label: "which inputs?", step: 1 },
+        { from: 0, to: 2, label: "sign this?", step: 2 },
+        { from: 2, to: 0, label: "format error!", step: 3 },
+        { from: 1, to: 2, label: "incompatible!", step: 4 }
+    ];
+
     return (
-        <div className="prose prose-invert max-w-none">
-            <div className="not-prose mb-8">
-                <div className="inline-block px-3 py-1 rounded-full bg-pkg-psbt/20 text-pkg-psbt text-sm font-medium mb-4">
-                    @caravan/psbt
+        <div className="relative w-full h-64 bg-gradient-to-br from-red-950/20 to-bg-secondary rounded-xl border border-red-500/30 overflow-hidden">
+            <svg viewBox="0 0 380 220" className="w-full h-full">
+                {/* Connection lines (chaotic) */}
+                <motion.path
+                    d="M 100 80 Q 190 40, 280 80"
+                    stroke="#ef4444"
+                    strokeWidth="2"
+                    strokeDasharray="4 4"
+                    fill="none"
+                    animate={{ strokeDashoffset: [0, -20] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                />
+                <motion.path
+                    d="M 100 80 L 190 160"
+                    stroke="#ef4444"
+                    strokeWidth="2"
+                    strokeDasharray="4 4"
+                    fill="none"
+                    animate={{ strokeDashoffset: [0, -20] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                />
+                <motion.path
+                    d="M 280 80 L 190 160"
+                    stroke="#ef4444"
+                    strokeWidth="2"
+                    strokeDasharray="4 4"
+                    fill="none"
+                    animate={{ strokeDashoffset: [0, -20] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                />
+
+                {/* Participants */}
+                {participants.map((p, i) => {
+                    const Icon = p.icon;
+                    return (
+                        <g key={i}>
+                            <motion.circle
+                                cx={p.x}
+                                cy={p.y}
+                                r={30}
+                                fill="#1a1a2e"
+                                stroke="#ef4444"
+                                strokeWidth="2"
+                                animate={{
+                                    scale: step === i || messages.find(m => (m.from === i || m.to === i) && m.step === step) ? [1, 1.1, 1] : 1
+                                }}
+                                transition={{ duration: 0.3 }}
+                            />
+                            <text
+                                x={p.x}
+                                y={p.y + 50}
+                                textAnchor="middle"
+                                fill="#f5f5f5"
+                                fontSize="12"
+                                fontWeight="bold"
+                            >
+                                {p.name}
+                            </text>
+                        </g>
+                    );
+                })}
+
+                {/* Animated error messages */}
+                <AnimatePresence mode="wait">
+                    {messages.filter(m => m.step === step).map((msg, i) => (
+                        <motion.g
+                            key={`${msg.from}-${msg.to}-${step}`}
+                            initial={{ opacity: 0, scale: 0.5 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.5 }}
+                        >
+                            <rect
+                                x={(participants[msg.from].x + participants[msg.to].x) / 2 - 35}
+                                y={(participants[msg.from].y + participants[msg.to].y) / 2 - 12}
+                                width={70}
+                                height={24}
+                                rx={4}
+                                fill="#dc2626"
+                            />
+                            <text
+                                x={(participants[msg.from].x + participants[msg.to].x) / 2}
+                                y={(participants[msg.from].y + participants[msg.to].y) / 2 + 4}
+                                textAnchor="middle"
+                                fill="white"
+                                fontSize="10"
+                                fontWeight="bold"
+                            >
+                                {msg.label}
+                            </text>
+                        </motion.g>
+                    ))}
+                </AnimatePresence>
+
+                {/* Confusion icons */}
+                <motion.text
+                    x="340"
+                    y="30"
+                    fontSize="24"
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                >
+                    😵
+                </motion.text>
+            </svg>
+
+            <div className="absolute bottom-3 left-3 right-3 bg-red-950/80 rounded px-3 py-2">
+                <div className="text-xs text-red-300 font-semibold">
+                    ❌ Before PSBT: Incompatible formats, manual coordination, security risks
                 </div>
-                <h1 className="text-5xl font-bold mb-4">Caravan PSBT Package</h1>
-                <p className="text-xl text-text-secondary">
-                    Work with Partially Signed Bitcoin Transactions - the standard for multisig coordination
-                </p>
+            </div>
+        </div>
+    );
+};
+
+// The Solution Visualization - With PSBT
+const WithPSBTVisualization = () => {
+    const [currentRole, setCurrentRole] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentRole(r => (r + 1) % 6);
+        }, 2000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const roles = [
+        { name: "Creator", icon: FileText, color: "#22c55e", desc: "Initialize PSBT" },
+        { name: "Updater", icon: RefreshCw, color: "#3b82f6", desc: "Add metadata" },
+        { name: "Signer 1", icon: PenTool, color: "#E8813B", desc: "Add signature" },
+        { name: "Signer 2", icon: PenTool, color: "#E8813B", desc: "Add signature" },
+        { name: "Combiner", icon: Merge, color: "#a855f7", desc: "Merge PSBTs" },
+        { name: "Finalizer", icon: Package, color: "#06b6d4", desc: "Complete tx" }
+    ];
+
+    return (
+        <div className="relative w-full h-64 bg-gradient-to-br from-green-950/20 to-bg-secondary rounded-xl border border-green-500/30 overflow-hidden">
+            <svg viewBox="0 0 380 220" className="w-full h-full">
+                {/* Flow line */}
+                <motion.path
+                    d="M 30 110 H 350"
+                    stroke="#22c55e"
+                    strokeWidth="3"
+                    fill="none"
+                    strokeLinecap="round"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                />
+
+                {/* Role nodes */}
+                {roles.map((role, i) => {
+                    const x = 40 + i * 55;
+                    const isActive = i === currentRole;
+                    const isPast = i < currentRole;
+
+                    return (
+                        <g key={i}>
+                            <motion.circle
+                                cx={x}
+                                cy={110}
+                                r={isActive ? 22 : 18}
+                                fill={isPast || isActive ? role.color : "#374151"}
+                                stroke={isActive ? "#fff" : "transparent"}
+                                strokeWidth={3}
+                                animate={{
+                                    scale: isActive ? [1, 1.15, 1] : 1
+                                }}
+                                transition={{ duration: 0.5, repeat: isActive ? Infinity : 0 }}
+                            />
+                            <text
+                                x={x}
+                                y={155}
+                                textAnchor="middle"
+                                fill="#f5f5f5"
+                                fontSize="9"
+                                fontWeight="bold"
+                            >
+                                {role.name}
+                            </text>
+                            {isActive && (
+                                <motion.text
+                                    x={x}
+                                    y={180}
+                                    textAnchor="middle"
+                                    fill={role.color}
+                                    fontSize="8"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                >
+                                    {role.desc}
+                                </motion.text>
+                            )}
+                        </g>
+                    );
+                })}
+
+                {/* PSBT packet animation */}
+                <motion.g
+                    animate={{
+                        x: 40 + currentRole * 55 - 20
+                    }}
+                    transition={{ duration: 0.5 }}
+                >
+                    <rect
+                        x={0}
+                        y={55}
+                        width={40}
+                        height={20}
+                        rx={4}
+                        fill="#E8813B"
+                    />
+                    <text
+                        x={20}
+                        y={69}
+                        textAnchor="middle"
+                        fill="white"
+                        fontSize="9"
+                        fontWeight="bold"
+                    >
+                        PSBT
+                    </text>
+                </motion.g>
+
+                {/* Progress indicator */}
+                <motion.rect
+                    x={30}
+                    y={200}
+                    width={(currentRole + 1) * 53}
+                    height={6}
+                    rx={3}
+                    fill="#22c55e"
+                    initial={{ width: 0 }}
+                    animate={{ width: (currentRole + 1) * 53 }}
+                    transition={{ duration: 0.5 }}
+                />
+                <rect
+                    x={30}
+                    y={200}
+                    width={318}
+                    height={6}
+                    rx={3}
+                    fill="#374151"
+                    style={{ zIndex: -1 }}
+                />
+            </svg>
+
+            <div className="absolute bottom-3 left-3 right-3 bg-green-950/80 rounded px-3 py-2">
+                <div className="text-xs text-green-300 font-semibold">
+                    ✓ With PSBT: Standardized format, clear roles, secure coordination
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// PSBT Structure Visual
+const PSBTStructureVisual = () => {
+    const [activeSection, setActiveSection] = useState<string | null>(null);
+
+    const sections = [
+        { id: 'magic', name: 'Magic Bytes', bytes: '70 73 62 74 ff', color: '#E8813B', desc: '"psbt" + separator - identifies this as a PSBT' },
+        { id: 'global', name: 'Global Map', bytes: '01 00 fd...', color: '#22c55e', desc: 'Transaction-wide data: unsigned tx, xpubs, version' },
+        { id: 'inputs', name: 'Input Maps', bytes: '02 00 00...', color: '#3b82f6', desc: 'Per-input data: UTXOs, scripts, derivation paths, signatures' },
+        { id: 'outputs', name: 'Output Maps', bytes: '03 00 00...', color: '#a855f7', desc: 'Per-output data: amounts, scripts, derivation paths' }
+    ];
+
+    return (
+        <div className="space-y-4">
+            <div className="flex flex-wrap gap-2 justify-center">
+                {sections.map((section) => (
+                    <motion.button
+                        key={section.id}
+                        className="px-4 py-3 rounded-lg border-2 transition-all"
+                        style={{
+                            borderColor: activeSection === section.id ? section.color : '#374151',
+                            backgroundColor: activeSection === section.id ? `${section.color}20` : 'transparent'
+                        }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onMouseEnter={() => setActiveSection(section.id)}
+                        onMouseLeave={() => setActiveSection(null)}
+                    >
+                        <div className="font-semibold text-sm" style={{ color: section.color }}>
+                            {section.name}
+                        </div>
+                        <div className="font-mono text-xs text-text-muted mt-1">
+                            {section.bytes}
+                        </div>
+                    </motion.button>
+                ))}
             </div>
 
-            <h2>What is @caravan/psbt?</h2>
+            <AnimatePresence mode="wait">
+                {activeSection && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="p-4 rounded-lg bg-bg-tertiary border border-border text-center"
+                    >
+                        <p className="text-sm text-text-secondary">
+                            {sections.find(s => s.id === activeSection)?.desc}
+                        </p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+};
+
+// Role Cards Component
+const RoleCard = ({
+    icon: Icon,
+    name,
+    description,
+    responsibilities,
+    color
+}: {
+    icon: any;
+    name: string;
+    description: string;
+    responsibilities: string[];
+    color: string;
+}) => (
+    <motion.div
+        whileHover={{ scale: 1.02, y: -4 }}
+        className="p-4 rounded-xl border-2 bg-bg-secondary"
+        style={{ borderColor: `${color}50` }}
+    >
+        <div className="flex items-center gap-3 mb-3">
+            <div
+                className="w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: `${color}20` }}
+            >
+                <Icon size={20} style={{ color }} />
+            </div>
+            <div>
+                <h4 className="font-bold" style={{ color }}>{name}</h4>
+                <p className="text-xs text-text-muted">{description}</p>
+            </div>
+        </div>
+        <ul className="space-y-1">
+            {responsibilities.map((r, i) => (
+                <li key={i} className="text-xs text-text-secondary flex items-start gap-2">
+                    <span style={{ color }}>•</span>
+                    {r}
+                </li>
+            ))}
+        </ul>
+    </motion.div>
+);
+
+export default function PSBTIntroPage() {
+    return (
+        <div className="prose prose-invert max-w-none">
+            {/* Hero Section */}
+            <div className="not-prose mb-12">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center"
+                >
+                    <div className="inline-block px-4 py-2 rounded-full bg-pkg-psbt/20 text-pkg-psbt text-sm font-bold mb-4">
+                        📜 Chapter 4: PSBTs Deep Dive
+                    </div>
+                    <h1 className="text-5xl md:text-6xl font-black mb-4 relative inline-block">
+                        Partially Signed Bitcoin Transactions
+                        <DoodleUnderline />
+                    </h1>
+                    <p className="text-xl text-text-secondary max-w-3xl mx-auto mt-6">
+                        The universal language for Bitcoin transaction coordination.
+                        Learn how PSBTs enable secure multisig, hardware wallet integration,
+                        and collaborative transactions.
+                    </p>
+                </motion.div>
+            </div>
+
+            <h2>The Problem PSBT Solves</h2>
 
             <p>
-                <code>@caravan/psbt</code> provides utilities for working with Partially Signed Bitcoin
-                Transactions (PSBTs), the industry standard for coordinating multisig transactions. It
-                implements BIP174 and supports both PSBTv0 and PSBTv2.
+                Before PSBTs, coordinating a multisig transaction was a nightmare.
+                Different wallets used different formats, hardware devices couldn't
+                communicate with software wallets, and there was no standard way to
+                pass partially-signed transactions between parties.
+            </p>
+
+            <div className="not-prose my-8 grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 className="text-lg font-bold text-red-400 mb-3 flex items-center gap-2">
+                        <XCircle size={20} />
+                        Before PSBT
+                    </h3>
+                    <BeforePSBTVisualization />
+                </div>
+                <div>
+                    <h3 className="text-lg font-bold text-green-400 mb-3 flex items-center gap-2">
+                        <CheckCircle2 size={20} />
+                        With PSBT
+                    </h3>
+                    <WithPSBTVisualization />
+                </div>
+            </div>
+
+            <Callout type="info" title="Why PSBT Matters">
+                <p>
+                    PSBTs were introduced in <strong>BIP-174</strong> to solve the interoperability
+                    problem. They provide a standardized container format that any wallet can read
+                    and write, enabling seamless coordination between different devices and software.
+                </p>
+            </Callout>
+
+            <h2>Key Benefits of PSBT</h2>
+
+            <div className="not-prose my-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                    { icon: Shield, title: "Secure Signing", desc: "Private keys never leave the signing device", color: "#22c55e" },
+                    { icon: Users, title: "Multi-Party", desc: "Multiple signers can collaborate safely", color: "#3b82f6" },
+                    { icon: Laptop, title: "Interoperable", desc: "Works across all major wallets", color: "#E8813B" },
+                    { icon: Layers, title: "Self-Contained", desc: "All signing data in one package", color: "#a855f7" }
+                ].map((benefit, i) => (
+                    <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: i * 0.1 }}
+                        className="p-4 rounded-xl bg-bg-secondary border border-border hover:border-primary/50 transition-colors"
+                    >
+                        <benefit.icon size={32} style={{ color: benefit.color }} className="mb-3" />
+                        <h4 className="font-bold mb-1">{benefit.title}</h4>
+                        <p className="text-sm text-text-muted">{benefit.desc}</p>
+                    </motion.div>
+                ))}
+            </div>
+
+            <h2>PSBT Structure Overview</h2>
+
+            <p>
+                A PSBT is a binary format that starts with magic bytes and contains
+                multiple key-value maps. Here's the high-level structure:
             </p>
 
             <div className="not-prose my-8">
-                <Card className="bg-gradient-to-br from-pkg-psbt/10 to-pkg-wallets/10 border-pkg-psbt/30">
+                <Card className="bg-bg-secondary">
                     <CardContent className="pt-6">
-                        <div className="text-center mb-6">
-                            <div className="text-6xl mb-4">📜</div>
-                            <h3 className="text-2xl font-bold text-pkg-psbt mb-2">The Multisig Glue</h3>
-                            <p className="text-text-secondary max-w-2xl mx-auto">
-                                PSBTs are how different parties coordinate to sign a multisig transaction.
-                                Think of it as a partially completed form that gets passed around until
-                                everyone has signed.
-                            </p>
-                        </div>
+                        <PSBTStructureVisual />
                     </CardContent>
                 </Card>
             </div>
 
-            <h2>Why PSBTs Matter</h2>
+            <h2>The PSBT Roles</h2>
+
+            <p>
+                BIP-174 defines specific roles, each with distinct responsibilities.
+                A single application (like Caravan) can perform multiple roles:
+            </p>
+
+            <div className="not-prose my-8 grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <RoleCard
+                    icon={FileText}
+                    name="Creator"
+                    description="Initializes the PSBT"
+                    color="#22c55e"
+                    responsibilities={[
+                        "Creates empty PSBT with unsigned transaction",
+                        "Sets inputs and outputs",
+                        "Does NOT add signing data"
+                    ]}
+                />
+                <RoleCard
+                    icon={RefreshCw}
+                    name="Updater"
+                    description="Adds signing metadata"
+                    color="#3b82f6"
+                    responsibilities={[
+                        "Adds UTXO information",
+                        "Adds redeem/witness scripts",
+                        "Adds BIP32 derivation paths"
+                    ]}
+                />
+                <RoleCard
+                    icon={PenTool}
+                    name="Signer"
+                    description="Adds signatures"
+                    color="#E8813B"
+                    responsibilities={[
+                        "Verifies transaction details",
+                        "Signs with private key(s)",
+                        "Adds partial signatures to PSBT"
+                    ]}
+                />
+                <RoleCard
+                    icon={Merge}
+                    name="Combiner"
+                    description="Merges PSBTs"
+                    color="#a855f7"
+                    responsibilities={[
+                        "Combines multiple PSBTs",
+                        "Merges partial signatures",
+                        "Handles parallel signing"
+                    ]}
+                />
+                <RoleCard
+                    icon={Package}
+                    name="Finalizer"
+                    description="Completes inputs"
+                    color="#06b6d4"
+                    responsibilities={[
+                        "Constructs final scriptSig/witness",
+                        "Removes unnecessary fields",
+                        "Prepares for extraction"
+                    ]}
+                />
+                <RoleCard
+                    icon={Send}
+                    name="Extractor"
+                    description="Produces final transaction"
+                    color="#f43f5e"
+                    responsibilities={[
+                        "Extracts complete transaction",
+                        "Produces broadcastable format",
+                        "Verifies all signatures present"
+                    ]}
+                />
+            </div>
+
+            <h2>PSBT Versions</h2>
 
             <div className="not-prose my-8 grid md:grid-cols-2 gap-6">
                 <Card className="border-pkg-psbt/30">
                     <CardHeader>
-                        <div className="w-12 h-12 rounded-lg bg-pkg-psbt/10 flex items-center justify-center mb-3">
-                            <Users className="text-pkg-psbt" size={24} />
-                        </div>
-                        <CardTitle className="text-lg">Coordination</CardTitle>
+                        <CardTitle className="flex items-center gap-2">
+                            <span className="px-2 py-1 rounded bg-pkg-psbt/20 text-pkg-psbt text-sm">v0</span>
+                            BIP-174: PSBTv0
+                        </CardTitle>
                     </CardHeader>
-                    <CardContent className="text-sm text-text-secondary space-y-2">
-                        <p>PSBTs enable multiple parties to collaborate on a transaction:</p>
-                        <ul className="space-y-1 text-xs">
-                            <li>• One person creates the transaction</li>
-                            <li>• Each signer adds their signature</li>
-                            <li>• Final person broadcasts to network</li>
-                            <li>• No single party has complete control</li>
-                        </ul>
-                    </CardContent>
-                </Card>
-
-                <Card className="border-pkg-wallets/30">
-                    <CardHeader>
-                        <div className="w-12 h-12 rounded-lg bg-pkg-wallets/10 flex items-center justify-center mb-3">
-                            <Lock className="text-pkg-wallets" size={24} />
+                    <CardContent className="space-y-3">
+                        <p className="text-sm text-text-secondary">
+                            The original PSBT specification. Widely supported and battle-tested.
+                        </p>
+                        <div className="space-y-2 text-sm">
+                            <div className="flex items-center gap-2 text-green-400">
+                                <CheckCircle2 size={14} />
+                                Universal wallet support
+                            </div>
+                            <div className="flex items-center gap-2 text-green-400">
+                                <CheckCircle2 size={14} />
+                                Simple and reliable
+                            </div>
+                            <div className="flex items-center gap-2 text-yellow-400">
+                                <RefreshCw size={14} />
+                                Fixed transaction structure
+                            </div>
                         </div>
-                        <CardTitle className="text-lg">Hardware Wallet Support</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm text-text-secondary space-y-2">
-                        <p>Hardware wallets love PSBTs:</p>
-                        <ul className="space-y-1 text-xs">
-                            <li>• Standard format all wallets understand</li>
-                            <li>• Can verify transaction details</li>
-                            <li>• Sign without exposing keys</li>
-                            <li>• Works offline for air-gapped security</li>
-                        </ul>
                     </CardContent>
                 </Card>
 
                 <Card className="border-primary/30">
                     <CardHeader>
-                        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
-                            <Layers className="text-primary" size={24} />
-                        </div>
-                        <CardTitle className="text-lg">Flexibility</CardTitle>
+                        <CardTitle className="flex items-center gap-2">
+                            <span className="px-2 py-1 rounded bg-primary/20 text-primary text-sm">v2</span>
+                            BIP-370: PSBTv2
+                        </CardTitle>
                     </CardHeader>
-                    <CardContent className="text-sm text-text-secondary space-y-2">
-                        <p>PSBTs are incredibly flexible:</p>
-                        <ul className="space-y-1 text-xs">
-                            <li>• Add signatures in any order</li>
-                            <li>• Combine multiple PSBTs</li>
-                            <li>• Support complex scripts</li>
-                            <li>• Works with any Bitcoin transaction</li>
-                        </ul>
-                    </CardContent>
-                </Card>
-
-                <Card className="border-pkg-multisig/30">
-                    <CardHeader>
-                        <div className="w-12 h-12 rounded-lg bg-pkg-multisig/10 flex items-center justify-center mb-3">
-                            <FileText className="text-pkg-multisig" size={24} />
-                        </div>
-                        <CardTitle className="text-lg">Standardized</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm text-text-secondary space-y-2">
-                        <p>Industry-wide standard:</p>
-                        <ul className="space-y-1 text-xs">
-                            <li>• BIP174 specification</li>
-                            <li>• Supported by all major wallets</li>
-                            <li>• Interoperable between platforms</li>
-                            <li>• Future-proof</li>
-                        </ul>
-                    </CardContent>
-                </Card>
-            </div>
-
-            <h2>PSBT Lifecycle</h2>
-
-            <div className="not-prose my-8">
-                <Card className="bg-bg-secondary">
-                    <CardHeader>
-                        <CardTitle>The PSBT Journey (BIP174 Roles)</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-4">
-                            <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold flex-shrink-0">
-                                    1
-                                </div>
-                                <div className="flex-1">
-                                    <div className="font-semibold mb-1">Creator</div>
-                                    <div className="text-sm text-text-secondary">
-                                        Creates an unsigned PSBT with inputs and outputs
-                                    </div>
-                                    <div className="mt-2 p-2 bg-bg-tertiary rounded text-xs font-mono">
-                                        createPSBT(inputs, outputs) → PSBT
-                                    </div>
-                                </div>
+                    <CardContent className="space-y-3">
+                        <p className="text-sm text-text-secondary">
+                            Enhanced version allowing dynamic construction of transactions.
+                        </p>
+                        <div className="space-y-2 text-sm">
+                            <div className="flex items-center gap-2 text-green-400">
+                                <CheckCircle2 size={14} />
+                                Add inputs/outputs after creation
                             </div>
-
-                            <div className="ml-6 border-l-2 border-border h-8" />
-
-                            <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 rounded-full bg-pkg-psbt/20 flex items-center justify-center text-pkg-psbt font-bold flex-shrink-0">
-                                    2
-                                </div>
-                                <div className="flex-1">
-                                    <div className="font-semibold mb-1">Updater</div>
-                                    <div className="text-sm text-text-secondary">
-                                        Adds additional information (UTXOs, derivation paths, scripts)
-                                    </div>
-                                    <div className="mt-2 p-2 bg-bg-tertiary rounded text-xs font-mono">
-                                        updatePSBT(psbt, utxoData) → Updated PSBT
-                                    </div>
-                                </div>
+                            <div className="flex items-center gap-2 text-green-400">
+                                <CheckCircle2 size={14} />
+                                Better locktime support
                             </div>
-
-                            <div className="ml-6 border-l-2 border-border h-8" />
-
-                            <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 rounded-full bg-pkg-wallets/20 flex items-center justify-center text-pkg-wallets font-bold flex-shrink-0">
-                                    3
-                                </div>
-                                <div className="flex-1">
-                                    <div className="font-semibold mb-1">Signer(s)</div>
-                                    <div className="text-sm text-text-secondary">
-                                        Each required party adds their signature (can happen in parallel)
-                                    </div>
-                                    <div className="mt-2 p-2 bg-bg-tertiary rounded text-xs font-mono">
-                                        signPSBT(psbt, privateKey) → Partially Signed PSBT
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="ml-6 border-l-2 border-border h-8" />
-
-                            <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 rounded-full bg-pkg-multisig/20 flex items-center justify-center text-pkg-multisig font-bold flex-shrink-0">
-                                    4
-                                </div>
-                                <div className="flex-1">
-                                    <div className="font-semibold mb-1">Combiner</div>
-                                    <div className="text-sm text-text-secondary">
-                                        Combines multiple partially signed PSBTs into one
-                                    </div>
-                                    <div className="mt-2 p-2 bg-bg-tertiary rounded text-xs font-mono">
-                                        combinePSBTs(psbt1, psbt2, psbt3) → Combined PSBT
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="ml-6 border-l-2 border-border h-8" />
-
-                            <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 rounded-full bg-pkg-clients/20 flex items-center justify-center text-pkg-clients font-bold flex-shrink-0">
-                                    5
-                                </div>
-                                <div className="flex-1">
-                                    <div className="font-semibold mb-1">Finalizer</div>
-                                    <div className="text-sm text-text-secondary">
-                                        Converts signatures into final scriptSig/scriptWitness
-                                    </div>
-                                    <div className="mt-2 p-2 bg-bg-tertiary rounded text-xs font-mono">
-                                        finalizePSBT(psbt) → Finalized PSBT
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="ml-6 border-l-2 border-border h-8" />
-
-                            <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 rounded-full bg-green-600/20 flex items-center justify-center text-green-400 font-bold flex-shrink-0">
-                                    6
-                                </div>
-                                <div className="flex-1">
-                                    <div className="font-semibold mb-1">Extractor</div>
-                                    <div className="text-sm text-text-secondary">
-                                        Extracts the final, broadcastable Bitcoin transaction
-                                    </div>
-                                    <div className="mt-2 p-2 bg-bg-tertiary rounded text-xs font-mono">
-                                        extractTransaction(psbt) → Bitcoin Transaction
-                                    </div>
-                                </div>
+                            <div className="flex items-center gap-2 text-green-400">
+                                <CheckCircle2 size={14} />
+                                Modifiable flags for flexibility
                             </div>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
-            <Callout type="info" title="BIP174 Roles">
+            <Callout type="tip" title="Caravan's Approach">
                 <p>
-                    Each step in the PSBT lifecycle has a defined role. A single application can perform
-                    multiple roles. For example, Caravan acts as Creator, Updater, Combiner, Finalizer,
-                    and Extractor - while hardware wallets act as Signers.
+                    Caravan uses <strong>PSBTv2 internally</strong> for its flexibility, but can
+                    convert to PSBTv0 for compatibility with hardware wallets that don't yet
+                    support v2. When you paste a PSBTv0, Caravan automatically converts it to v2.
                 </p>
             </Callout>
 
-            <h2>Installation</h2>
+            <h2>Continue Your Journey</h2>
 
-            <div className="not-prose my-6">
-                <Card className="bg-bg-secondary">
-                    <CardContent className="pt-6">
-                        <pre className="bg-bg-tertiary p-4 rounded-lg overflow-x-auto">
-                            <code className="text-sm text-pkg-psbt">npm install @caravan/psbt</code>
-                        </pre>
-                    </CardContent>
-                </Card>
+            <div className="not-prose my-8 grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Link href="/learn/psbt/bip174" className="group">
+                    <Card className="h-full hover:border-pkg-psbt/50 transition-colors">
+                        <CardContent className="pt-6">
+                            <div className="text-4xl mb-3">📋</div>
+                            <h3 className="font-bold mb-2 group-hover:text-pkg-psbt transition-colors">
+                                BIP-174 Deep Dive
+                            </h3>
+                            <p className="text-sm text-text-muted">
+                                Master the original PSBT specification with detailed examples
+                            </p>
+                        </CardContent>
+                    </Card>
+                </Link>
+
+                <Link href="/learn/psbt/bip370" className="group">
+                    <Card className="h-full hover:border-primary/50 transition-colors">
+                        <CardContent className="pt-6">
+                            <div className="text-4xl mb-3">🚀</div>
+                            <h3 className="font-bold mb-2 group-hover:text-primary transition-colors">
+                                BIP-370 Deep Dive
+                            </h3>
+                            <p className="text-sm text-text-muted">
+                                Explore PSBTv2's enhanced capabilities and new fields
+                            </p>
+                        </CardContent>
+                    </Card>
+                </Link>
+
+                <Link href="/learn/psbt/explorer" className="group">
+                    <Card className="h-full hover:border-green-500/50 transition-colors">
+                        <CardContent className="pt-6">
+                            <div className="text-4xl mb-3">🔍</div>
+                            <h3 className="font-bold mb-2 group-hover:text-green-400 transition-colors">
+                                PSBT Explorer
+                            </h3>
+                            <p className="text-sm text-text-muted">
+                                Decode and analyze any PSBT with detailed field explanations
+                            </p>
+                        </CardContent>
+                    </Card>
+                </Link>
             </div>
 
-            <h2>Quick Start</h2>
-
-            <CodePlayground
-                title="Basic PSBT Operations"
-                initialCode={`// Import PSBT utilities
-const { 
-  Psbt,
-  PsbtV2,
-  // Note: Full PSBT operations require Bitcoin Core or similar
-  // This is a conceptual example
-} = CaravanPSBT;
-
-console.log("PSBT Package Overview:\\n");
-
-console.log("Key Features:");
-console.log("• Create unsigned PSBTs");
-console.log("• Add signatures from multiple parties");
-console.log("• Combine partial signatures");
-console.log("• Finalize complete transactions");
-console.log("• Extract broadcastable transactions");
-console.log("");
-
-console.log("Supported Versions:");
-console.log("• PSBTv0 (BIP174) - Original standard");
-console.log("• PSBTv2 (BIP370) - Enhanced version");
-console.log("");
-
-console.log("Use Cases:");
-console.log("• Multisig coordination");
-console.log("• Hardware wallet integration");
-console.log("• CoinJoin transactions");
-console.log("• Complex smart contracts");
-console.log("");
-
-console.log("✓ Industry standard for Bitcoin transactions!");`}
-                imports={{ CaravanPSBT }}
-                height="450px"
+            <PageNavigation
+                prev={{ href: '/learn/foundations/multisig', label: 'Multisig Foundations' }}
+                next={{ href: '/learn/psbt/bip174', label: 'BIP-174 Deep Dive' }}
             />
-
-            <h2>Package Modules</h2>
-
-            <div className="not-prose my-8 space-y-4">
-                <Card className="group hover:border-pkg-psbt/50 transition-all cursor-pointer">
-                    <Link href="/learn/packages/psbt/structure">
-                        <CardHeader>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-pkg-psbt/10 flex items-center justify-center group-hover:bg-pkg-psbt/20 transition-colors">
-                                        <Layers className="text-pkg-psbt" size={20} />
-                                    </div>
-                                    <div>
-                                        <CardTitle className="text-lg">PSBT Structure</CardTitle>
-                                        <CardDescription>Understanding the PSBT format and components</CardDescription>
-                                    </div>
-                                </div>
-                                <ArrowRight className="text-text-muted group-hover:text-pkg-psbt transition-colors" size={20} />
-                            </div>
-                        </CardHeader>
-                    </Link>
-                </Card>
-
-                <Card className="group hover:border-pkg-psbt/50 transition-all cursor-pointer">
-                    <Link href="/learn/packages/psbt/creating">
-                        <CardHeader>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-pkg-wallets/10 flex items-center justify-center group-hover:bg-pkg-wallets/20 transition-colors">
-                                        <FileText className="text-pkg-wallets" size={20} />
-                                    </div>
-                                    <div>
-                                        <CardTitle className="text-lg">Creating PSBTs</CardTitle>
-                                        <CardDescription>Build unsigned transactions from inputs and outputs</CardDescription>
-                                    </div>
-                                </div>
-                                <ArrowRight className="text-text-muted group-hover:text-pkg-psbt transition-colors" size={20} />
-                            </div>
-                        </CardHeader>
-                    </Link>
-                </Card>
-
-                <Card className="group hover:border-pkg-psbt/50 transition-all cursor-pointer">
-                    <Link href="/learn/packages/psbt/signing">
-                        <CardHeader>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-pkg-multisig/10 flex items-center justify-center group-hover:bg-pkg-multisig/20 transition-colors">
-                                        <Lock className="text-pkg-multisig" size={20} />
-                                    </div>
-                                    <div>
-                                        <CardTitle className="text-lg">Signing PSBTs</CardTitle>
-                                        <CardDescription>Add signatures and coordinate multisig signing</CardDescription>
-                                    </div>
-                                </div>
-                                <ArrowRight className="text-text-muted group-hover:text-pkg-psbt transition-colors" size={20} />
-                            </div>
-                        </CardHeader>
-                    </Link>
-                </Card>
-            </div>
-
-            <h2>PSBTv0 vs PSBTv2</h2>
-
-            <div className="not-prose my-8 grid md:grid-cols-2 gap-6">
-                <Card className="border-pkg-psbt/30">
-                    <CardHeader>
-                        <CardTitle className="text-lg">PSBTv0 (BIP174)</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm space-y-3">
-                        <div className="p-3 bg-pkg-psbt/10 rounded">
-                            <div className="font-semibold text-pkg-psbt mb-2">Original Standard</div>
-                            <div className="text-text-secondary text-xs">
-                                The first PSBT specification, widely supported
-                            </div>
-                        </div>
-                        <div className="space-y-2 text-xs text-text-secondary">
-                            <div className="flex items-center gap-2">
-                                <span className="text-green-400">✓</span>
-                                <span>Universal wallet support</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-green-400">✓</span>
-                                <span>Battle-tested</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-green-400">✓</span>
-                                <span>Simple and reliable</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-yellow-400">~</span>
-                                <span>Limited metadata support</span>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="border-pkg-wallets/30">
-                    <CardHeader>
-                        <CardTitle className="text-lg">PSBTv2 (BIP370)</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm space-y-3">
-                        <div className="p-3 bg-pkg-wallets/10 rounded">
-                            <div className="font-semibold text-pkg-wallets mb-2">Enhanced Version</div>
-                            <div className="text-text-secondary text-xs">
-                                Newer standard with additional features
-                            </div>
-                        </div>
-                        <div className="space-y-2 text-xs text-text-secondary">
-                            <div className="flex items-center gap-2">
-                                <span className="text-green-400">✓</span>
-                                <span>More transaction metadata</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-green-400">✓</span>
-                                <span>Better fee bumping support</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-green-400">✓</span>
-                                <span>Improved validation</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-yellow-400">~</span>
-                                <span>Growing wallet support</span>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            <Callout type="tip" title="Which Version to Use?">
-                <p>
-                    <strong>For most applications, use PSBTv0:</strong>
-                </p>
-                <ul>
-                    <li>• Maximum compatibility with hardware wallets</li>
-                    <li>• Supported by all major Bitcoin software</li>
-                    <li>• Proven and reliable</li>
-                </ul>
-                <p className="mt-3">
-                    <strong>Consider PSBTv2 if you need:</strong>
-                </p>
-                <ul>
-                    <li>• Advanced transaction construction</li>
-                    <li>• Complex fee bumping scenarios (RBF/CPFP)</li>
-                    <li>• Detailed transaction metadata</li>
-                </ul>
-            </Callout>
-
-            <h2>Common PSBT Operations</h2>
-
-            <CodePlayground
-                title="PSBT Workflow Concepts"
-                initialCode={`// Conceptual overview of PSBT operations
-// (Full implementation requires transaction building)
-
-console.log("PSBT Workflow:\\n");
-
-console.log("1. CREATE");
-console.log("   • Define inputs (UTXOs to spend)");
-console.log("   • Define outputs (recipients)");
-console.log("   • Create unsigned PSBT");
-console.log("");
-
-console.log("2. UPDATE");
-console.log("   • Add UTXO information");
-console.log("   • Add derivation paths");
-console.log("   • Add witness/redeem scripts");
-console.log("   • Prepare for signing");
-console.log("");
-
-console.log("3. SIGN");
-console.log("   • Pass to hardware wallet");
-console.log("   • Or sign with software key");
-console.log("   • Each signer adds signature");
-console.log("   • Can happen in parallel");
-console.log("");
-
-console.log("4. COMBINE");
-console.log("   • Merge multiple signed PSBTs");
-console.log("   • Collect all required signatures");
-console.log("   • Verify signature count");
-console.log("");
-
-console.log("5. FINALIZE");
-console.log("   • Convert to final transaction");
-console.log("   • Build scriptSig/scriptWitness");
-console.log("   • Ready for broadcast");
-console.log("");
-
-console.log("6. EXTRACT & BROADCAST");
-console.log("   • Extract Bitcoin transaction");
-console.log("   • Broadcast to network");
-console.log("   • Transaction confirmed!");`}
-                imports={{ CaravanPSBT }}
-                height="520px"
-            />
-
-            <h2>PSBT Best Practices</h2>
-
-            <div className="not-prose my-6 space-y-4">
-                <Card className="border-green-500/30">
-                    <CardHeader>
-                        <CardTitle className="text-lg">✅ Do's</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm text-text-secondary space-y-2">
-                        <ul className="space-y-2">
-                            <li>• <strong>Validate PSBTs</strong> before signing</li>
-                            <li>• <strong>Verify transaction details</strong> on hardware wallet screen</li>
-                            <li>• <strong>Keep original PSBTs</strong> until transaction confirms</li>
-                            <li>• <strong>Use secure channels</strong> to transfer PSBTs between parties</li>
-                            <li>• <strong>Check fee rates</strong> before finalizing</li>
-                            <li>• <strong>Store signed PSBTs</strong> as backup until broadcast</li>
-                        </ul>
-                    </CardContent>
-                </Card>
-
-                <Card className="border-red-500/30">
-                    <CardHeader>
-                        <CardTitle className="text-lg">❌ Don'ts</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm text-text-secondary space-y-2">
-                        <ul className="space-y-2">
-                            <li>• <strong>Don't blindly sign</strong> PSBTs without verification</li>
-                            <li>• <strong>Don't share PSBTs</strong> over unsecured channels</li>
-                            <li>• <strong>Don't lose the PSBT</strong> before all signatures collected</li>
-                            <li>• <strong>Don't modify</strong> finalized PSBTs</li>
-                            <li>• <strong>Don't reuse</strong> PSBTs for different transactions</li>
-                        </ul>
-                    </CardContent>
-                </Card>
-            </div>
-
-            <h2>Real-World PSBT Flow</h2>
-
-            <div className="not-prose my-8">
-                <Card className="bg-bg-secondary border-pkg-psbt/30">
-                    <CardHeader>
-                        <CardTitle>2-of-3 Multisig Payment Example</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4 text-sm">
-                        <div className="p-4 bg-primary/10 rounded">
-                            <div className="font-semibold text-primary mb-2">Day 1: Alice Creates PSBT</div>
-                            <div className="text-text-secondary text-xs space-y-1">
-                                <div>• Opens Caravan wallet</div>
-                                <div>• Creates transaction: Send 0.1 BTC to client</div>
-                                <div>• Selects UTXOs to spend</div>
-                                <div>• Generates unsigned PSBT</div>
-                                <div>• Saves PSBT file: <code className="text-primary">payment_001.psbt</code></div>
-                            </div>
-                        </div>
-
-                        <div className="p-4 bg-pkg-wallets/10 rounded">
-                            <div className="font-semibold text-pkg-wallets mb-2">Day 2: Bob Signs</div>
-                            <div className="text-text-secondary text-xs space-y-1">
-                                <div>• Receives PSBT file from Alice</div>
-                                <div>• Loads into Caravan</div>
-                                <div>• Verifies recipient address on hardware wallet</div>
-                                <div>• Signs with Ledger device</div>
-                                <div>• Saves signed PSBT: <code className="text-pkg-wallets">payment_001_bob.psbt</code></div>
-                                <div>• Sends back to Alice</div>
-                            </div>
-                        </div>
-
-                        <div className="p-4 bg-pkg-multisig/10 rounded">
-                            <div className="font-semibold text-pkg-multisig mb-2">Day 3: Carol Signs</div>
-                            <div className="text-text-secondary text-xs space-y-1">
-                                <div>• Receives partially signed PSBT</div>
-                                <div>• Verifies transaction details</div>
-                                <div>• Signs with Trezor device</div>
-                                <div>• Now has 2 of 3 required signatures!</div>
-                            </div>
-                        </div>
-
-                        <div className="p-4 bg-green-950/20 rounded border border-green-500/30">
-                            <div className="font-semibold text-green-400 mb-2">Day 3: Alice Finalizes & Broadcasts</div>
-                            <div className="text-text-secondary text-xs space-y-1">
-                                <div>• Combines all signatures</div>
-                                <div>• Finalizes PSBT</div>
-                                <div>• Extracts Bitcoin transaction</div>
-                                <div>• Broadcasts to network</div>
-                                <div>• ✅ Transaction confirmed!</div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            <h2>Key Takeaways</h2>
-
-            <div className="not-prose my-6">
-                <Card className="bg-pkg-psbt/5 border-pkg-psbt/30">
-                    <CardContent className="pt-6">
-                        <ul className="space-y-3 text-text-secondary">
-                            <li className="flex gap-3">
-                                <span className="text-pkg-psbt text-xl">✓</span>
-                                <span>PSBTs are the standard for multisig coordination</span>
-                            </li>
-                            <li className="flex gap-3">
-                                <span className="text-pkg-psbt text-xl">✓</span>
-                                <span>Follow BIP174 lifecycle: Create → Update → Sign → Combine → Finalize → Extract</span>
-                            </li>
-                            <li className="flex gap-3">
-                                <span className="text-pkg-psbt text-xl">✓</span>
-                                <span>Signatures can be added in any order</span>
-                            </li>
-                            <li className="flex gap-3">
-                                <span className="text-pkg-psbt text-xl">✓</span>
-                                <span>Hardware wallets use PSBTs for secure signing</span>
-                            </li>
-                            <li className="flex gap-3">
-                                <span className="text-pkg-psbt text-xl">✓</span>
-                                <span>Always verify transaction details before signing</span>
-                            </li>
-                            <li className="flex gap-3">
-                                <span className="text-pkg-psbt text-xl">✓</span>
-                                <span>PSBTv0 has better compatibility, PSBTv2 has more features</span>
-                            </li>
-                        </ul>
-                    </CardContent>
-                </Card>
-            </div>
-
-            <PageNavigation />
         </div>
     );
 }

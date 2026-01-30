@@ -57,14 +57,12 @@ export const navigation: NavItem[] = [
         description: "Core Bitcoin utilities",
         children: [
           { title: "Overview", href: "/learn/packages/bitcoin" },
-          { title: "Networks", href: "/learn/packages/bitcoin/networks" },
           { title: "Addresses", href: "/learn/packages/bitcoin/addresses" },
           { title: "Keys", href: "/learn/packages/bitcoin/keys" },
           { title: "Multisig", href: "/learn/packages/bitcoin/multisig" },
           {
             title: "The Braid",
             href: "/learn/packages/bitcoin/braid",
-            badge: "⭐",
           },
         ],
       },
@@ -74,15 +72,22 @@ export const navigation: NavItem[] = [
         description: "Partially Signed Bitcoin Transactions",
         children: [
           { title: "Overview", href: "/learn/packages/psbt" },
-          { title: "PSBT Structure", href: "/learn/packages/psbt/structure" },
-          { title: "Creating PSBTs", href: "/learn/packages/psbt/creating" },
-          { title: "Signing", href: "/learn/packages/psbt/signing" },
+          { title: "BIP-174", href: "/learn/packages/psbt/bip174" },
+          { title: "BIP-370", href: "/learn/packages/psbt/bip370" },
+          {
+            title: "Understanding PSBT",
+            href: "/learn/packages/psbt/pipeline",
+          },
+          {
+            title: "Create PSBT",
+            href: "/learn/packages/psbt/builder",
+          },
         ],
       },
       {
-        title: "@caravan/multisig",
-        href: "/learn/packages/multisig",
-        description: "Multisig wallet configuration",
+        title: "@caravan/transactions",
+        href: "/learn/packages/transactions",
+        description: "Fees Package",
       },
     ],
   },
