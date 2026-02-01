@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 //@ts-nocheck
 /* eslint-disable react/no-unescaped-entities */
@@ -369,8 +370,8 @@ export default function PSBTExplorerPage() {
                         <>
                             {/* Version Banner */}
                             <div className={`p-4 rounded-lg border ${parsedPSBT.version === 2
-                                    ? 'bg-primary/10 border-primary/30'
-                                    : 'bg-pkg-psbt/10 border-pkg-psbt/30'
+                                ? 'bg-primary/10 border-primary/30'
+                                : 'bg-pkg-psbt/10 border-pkg-psbt/30'
                                 }`}>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
@@ -384,8 +385,8 @@ export default function PSBTExplorerPage() {
                                         </span>
                                     </div>
                                     <span className={`px-3 py-1 rounded-full text-sm ${parsedPSBT.version === 2
-                                            ? 'bg-primary/20 text-primary'
-                                            : 'bg-pkg-psbt/20 text-pkg-psbt'
+                                        ? 'bg-primary/20 text-primary'
+                                        : 'bg-pkg-psbt/20 text-pkg-psbt'
                                         }`}>
                                         {parsedPSBT.version === 2 ? 'BIP-370' : 'BIP-174'}
                                     </span>

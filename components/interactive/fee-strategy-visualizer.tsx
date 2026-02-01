@@ -116,8 +116,8 @@ function RBFVisualization({ step }: { step: number }) {
                     <div
                         key={i}
                         className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${step >= i
-                                ? 'bg-green-500/20 text-green-400 border border-green-500/50'
-                                : 'bg-bg-tertiary text-text-muted'
+                            ? 'bg-green-500/20 text-green-400 border border-green-500/50'
+                            : 'bg-bg-tertiary text-text-muted'
                             }`}
                     >
                         {label}
@@ -246,8 +246,8 @@ function CPFPVisualization({ step }: { step: number }) {
                     <div
                         key={i}
                         className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${step >= i
-                                ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
-                                : 'bg-bg-tertiary text-text-muted'
+                            ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50'
+                            : 'bg-bg-tertiary text-text-muted'
                             }`}
                     >
                         {label}
@@ -312,7 +312,7 @@ function CPFPVisualization({ step }: { step: number }) {
                             transition={{ delay: 0.5 }}
                             className="text-center mt-2 text-xs text-purple-400"
                         >
-                            Spends parent's output
+                            Spends parent&apos;s output
                         </motion.div>
                     </motion.div>
                 )}

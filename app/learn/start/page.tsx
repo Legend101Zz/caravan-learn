@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 //@ts-nocheck
 /* eslint-disable react/no-unescaped-entities */
@@ -41,7 +42,9 @@ const AnimatedHero = () => {
                         key={i}
                         className="absolute w-2 h-2 bg-primary/20 rounded-full"
                         initial={{
+                            // eslint-disable-next-line react-hooks/purity
                             x: Math.random() * 100 + '%',
+                            // eslint-disable-next-line react-hooks/purity
                             y: Math.random() * 100 + '%',
                         }}
                         animate={{
@@ -49,8 +52,10 @@ const AnimatedHero = () => {
                             opacity: [0, 1, 0],
                         }}
                         transition={{
+                            // eslint-disable-next-line react-hooks/purity
                             duration: Math.random() * 10 + 5,
                             repeat: Infinity,
+                            // eslint-disable-next-line react-hooks/purity
                             delay: Math.random() * 5,
                         }}
                     />

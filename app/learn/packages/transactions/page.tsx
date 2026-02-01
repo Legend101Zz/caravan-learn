@@ -1,46 +1,39 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 //@ts-nocheck
 /* eslint-disable react/no-unescaped-entities */
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import Link from 'next/link';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowRight,
-    ArrowDown,
-    Zap,
-    Clock,
-    TrendingUp,
+    Coins,
     RefreshCw,
     Baby,
+    Layers,
+    Sparkles,
+    Gauge,
     AlertTriangle,
     CheckCircle2,
-    Layers,
-    Plus,
-    Minus,
-    Settings,
+    Clock,
+    Zap,
+    TrendingUp,
+    Package,
     Eye,
     Copy,
-    Check,
-    Play,
-    RotateCcw,
-    ChevronRight,
-    Sparkles,
-    Coins,
-    Send,
-    Package,
-    Target,
-    Gauge
+    Check
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Callout } from '@/components/content/callout';
 import { CodePlayground } from '@/components/interactive/code-playground';
 import { PageNavigation } from '@/components/layout/page-navigation';
-import { TransactionFlowBuilder } from '@/components/interactive/transaction-flow-builder';
-import { PSBTVisualizer } from '@/components/interactive/psbt-visualizer';
-import { FeeStrategyVisualizer } from '@/components/interactive/fee-strategy-visualizer';
+import { EnhancedTransactionBuilder } from '@/components/interactive/enhanced-transaction-builder';
+import { RBFBuilder } from '@/components/interactive/rbf-builder';
+import { CPFPBuilder } from '@/components/interactive/cpfp-builder';
+import { InteractiveFeeStrategy } from '@/components/interactive/interactive-fee-strategy';
 
 // Hand-drawn underline component
 const DoodleUnderline = ({ className = "" }: { className?: string }) => (
@@ -63,6 +56,8 @@ const DoodleUnderline = ({ className = "" }: { className?: string }) => (
 );
 
 export default function FeesPackagePage() {
+    const [activeTab, setActiveTab] = useState('builder');
+
     return (
         <div className="prose prose-invert max-w-none">
             {/* Hero Section */}
@@ -194,7 +189,7 @@ export default function FeesPackagePage() {
                 </div>
             </motion.section>
 
-            {/* Fee Strategies Visual */}
+            {/* Interactive Learning Hub */}
             <motion.section
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
@@ -202,196 +197,46 @@ export default function FeesPackagePage() {
                 className="not-prose mb-16"
             >
                 <h2 className="text-3xl font-bold mb-6 text-text-primary flex items-center gap-3">
-                    <RefreshCw className="text-pkg-fees" />
-                    Fee Bumping Strategies
+                    <Sparkles className="text-pkg-fees" />
+                    Interactive Learning Hub
                 </h2>
 
-                <p className="text-text-secondary mb-8">
-                    What happens when your transaction gets stuck? The @caravan/fees package provides
-                    two powerful strategies to unstick your transactions.
-                </p>
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                    <TabsList className="grid w-full grid-cols-4 mb-8">
+                        <TabsTrigger value="builder" className="flex items-center gap-2">
+                            <Layers className="w-4 h-4" />
+                            <span className="hidden sm:inline">TX Builder</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="strategy" className="flex items-center gap-2">
+                            <Gauge className="w-4 h-4" />
+                            <span className="hidden sm:inline">Fee Strategy</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="rbf" className="flex items-center gap-2">
+                            <RefreshCw className="w-4 h-4" />
+                            <span className="hidden sm:inline">RBF</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="cpfp" className="flex items-center gap-2">
+                            <Baby className="w-4 h-4" />
+                            <span className="hidden sm:inline">CPFP</span>
+                        </TabsTrigger>
+                    </TabsList>
 
-                <FeeStrategyVisualizer />
-            </motion.section>
+                    <TabsContent value="builder" className="mt-0">
+                        <EnhancedTransactionBuilder />
+                    </TabsContent>
 
-            {/* RBF Deep Dive */}
-            <motion.section
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                className="not-prose mb-16"
-            >
-                <h2 className="text-3xl font-bold mb-6 text-text-primary flex items-center gap-3">
-                    <RefreshCw className="text-green-500" />
-                    RBF: Replace-By-Fee
-                </h2>
+                    <TabsContent value="strategy" className="mt-0">
+                        <InteractiveFeeStrategy />
+                    </TabsContent>
 
-                <Card className="bg-bg-secondary border-green-500/30 mb-8">
-                    <CardContent className="pt-6">
-                        <div className="grid md:grid-cols-2 gap-8">
-                            <div>
-                                <h3 className="text-xl font-bold text-text-primary mb-4">How RBF Works</h3>
-                                <div className="space-y-4">
-                                    <div className="flex gap-4">
-                                        <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 text-green-500 font-bold">1</div>
-                                        <div>
-                                            <div className="font-medium text-text-primary">Original Transaction</div>
-                                            <div className="text-sm text-text-secondary">You broadcast TX with sequence &lt; 0xfffffffe (RBF-enabled)</div>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-4">
-                                        <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 text-green-500 font-bold">2</div>
-                                        <div>
-                                            <div className="font-medium text-text-primary">Create Replacement</div>
-                                            <div className="text-sm text-text-secondary">Build new TX spending same inputs with higher fee</div>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-4">
-                                        <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 text-green-500 font-bold">3</div>
-                                        <div>
-                                            <div className="font-medium text-text-primary">Broadcast Replacement</div>
-                                            <div className="text-sm text-text-secondary">Network replaces old TX (BIP125 rules)</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                    <TabsContent value="rbf" className="mt-0">
+                        <RBFBuilder />
+                    </TabsContent>
 
-                            <div>
-                                <h3 className="text-xl font-bold text-text-primary mb-4">BIP125 Requirements</h3>
-                                <div className="space-y-3">
-                                    <div className="p-3 bg-bg-tertiary rounded-lg">
-                                        <div className="flex items-center gap-2">
-                                            <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                            <span className="text-sm text-text-primary">Original TX must signal RBF</span>
-                                        </div>
-                                    </div>
-                                    <div className="p-3 bg-bg-tertiary rounded-lg">
-                                        <div className="flex items-center gap-2">
-                                            <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                            <span className="text-sm text-text-primary">New fee must be higher than old</span>
-                                        </div>
-                                    </div>
-                                    <div className="p-3 bg-bg-tertiary rounded-lg">
-                                        <div className="flex items-center gap-2">
-                                            <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                            <span className="text-sm text-text-primary">Must include at least one original input</span>
-                                        </div>
-                                    </div>
-                                    <div className="p-3 bg-bg-tertiary rounded-lg">
-                                        <div className="flex items-center gap-2">
-                                            <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                            <span className="text-sm text-text-primary">New fee ≥ old fee + min relay fee</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Callout type="tip" title="RBF Use Cases">
-                    <ul className="space-y-2 text-sm">
-                        <li><strong>Accelerate:</strong> Keep same outputs, increase fee to speed up confirmation</li>
-                        <li><strong>Cancel:</strong> Replace outputs to send funds back to yourself (minus higher fee)</li>
-                        <li><strong>Modify:</strong> Change recipient or amount before confirmation</li>
-                    </ul>
-                </Callout>
-            </motion.section>
-
-            {/* CPFP Deep Dive */}
-            <motion.section
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                className="not-prose mb-16"
-            >
-                <h2 className="text-3xl font-bold mb-6 text-text-primary flex items-center gap-3">
-                    <Baby className="text-purple-500" />
-                    CPFP: Child-Pays-For-Parent
-                </h2>
-
-                <Card className="bg-bg-secondary border-purple-500/30 mb-8">
-                    <CardContent className="pt-6">
-                        <div className="grid md:grid-cols-2 gap-8">
-                            <div>
-                                <h3 className="text-xl font-bold text-text-primary mb-4">How CPFP Works</h3>
-                                <div className="space-y-4">
-                                    <div className="flex gap-4">
-                                        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 text-purple-500 font-bold">1</div>
-                                        <div>
-                                            <div className="font-medium text-text-primary">Stuck Parent TX</div>
-                                            <div className="text-sm text-text-secondary">Original TX with low fee sitting in mempool</div>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-4">
-                                        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 text-purple-500 font-bold">2</div>
-                                        <div>
-                                            <div className="font-medium text-text-primary">Create Child TX</div>
-                                            <div className="text-sm text-text-secondary">Spend output from parent with HIGH fee</div>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-4">
-                                        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 text-purple-500 font-bold">3</div>
-                                        <div>
-                                            <div className="font-medium text-text-primary">Package Fee Rate</div>
-                                            <div className="text-sm text-text-secondary">Miners see combined (parent+child) fee rate</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <h3 className="text-xl font-bold text-text-primary mb-4">CPFP Formula</h3>
-                                <div className="p-4 bg-bg-tertiary rounded-lg mb-4">
-                                    <div className="font-mono text-sm text-purple-400 mb-2">
-                                        child_fee = (target_rate × (parent_size + child_size)) - parent_fee
-                                    </div>
-                                </div>
-
-                                <div className="p-4 bg-purple-500/10 rounded-lg border border-purple-500/30">
-                                    <div className="text-sm text-text-secondary mb-2">
-                                        <strong className="text-purple-400">Example:</strong>
-                                    </div>
-                                    <div className="text-xs font-mono text-text-muted space-y-1">
-                                        <div>Parent: 200 vB, 200 sats (1 sat/vB)</div>
-                                        <div>Child: 150 vB</div>
-                                        <div>Target: 10 sats/vB</div>
-                                        <div className="pt-2 border-t border-purple-500/30 mt-2">
-                                            <span className="text-purple-400">child_fee</span> = (10 × 350) - 200 = <span className="text-green-400">3,300 sats</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Callout type="warning" title="When to Use CPFP">
-                    <p className="text-sm">
-                        Use CPFP when you're the <strong>recipient</strong> of a stuck transaction, or when
-                        the original TX doesn't signal RBF. You must have a spendable output from the parent TX.
-                    </p>
-                </Callout>
-            </motion.section>
-
-            {/* Interactive Transaction Builder */}
-            <motion.section
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                className="not-prose mb-16"
-            >
-                <h2 className="text-3xl font-bold mb-6 text-text-primary flex items-center gap-3">
-                    <Layers className="text-pkg-fees" />
-                    Interactive Transaction Builder
-                </h2>
-
-                <p className="text-text-secondary mb-8">
-                    Build transactions visually using the BtcTransactionTemplate class. See how inputs,
-                    outputs, and fees flow through the transaction building process.
-                </p>
-
-                <TransactionFlowBuilder />
+                    <TabsContent value="cpfp" className="mt-0">
+                        <CPFPBuilder />
+                    </TabsContent>
+                </Tabs>
             </motion.section>
 
             {/* Code Examples */}
@@ -403,105 +248,137 @@ export default function FeesPackagePage() {
             >
                 <h2 className="text-3xl font-bold mb-6 text-text-primary">Code Examples</h2>
 
-                <h3 className="text-xl font-bold mb-4 text-text-primary">Transaction Analyzer</h3>
-                <CodePlayground
-                    title="Analyze a Transaction"
-                    initialCode={`// Analyze an existing transaction
-// Note: In real usage, you'd provide actual transaction hex
+                <div className="space-y-8">
+                    <div>
+                        <h3 className="text-xl font-bold mb-4 text-text-primary">Building a Transaction</h3>
+                        <CodePlayground
+                            title="BtcTransactionTemplate Example"
+                            initialCode={`import { BtcTransactionTemplate } from '@caravan/fees';
 
-const mockAnalysis = {
-  txid: "a1b2c3d4e5f6...",
-  vsize: 140,
-  weight: 560,
-  fee: "1000",
-  feeRate: 7.14,
-  inputs: [
-    { txid: "prev_tx...", vout: 0, value: "100000" }
-  ],
-  outputs: [
-    { address: "bc1q...", value: "98000" },
-    { address: "bc1q...", value: "1000" } // change
-  ],
-  isRBFSignaled: true,
-  canRBF: true,
-  canCPFP: true,
-  recommendedStrategy: "RBF"
-};
-
-console.log("Transaction Analysis:");
-console.log("=".repeat(40));
-console.log("TXID:", mockAnalysis.txid);
-console.log("Size:", mockAnalysis.vsize, "vBytes");
-console.log("Fee:", mockAnalysis.fee, "sats");
-console.log("Fee Rate:", mockAnalysis.feeRate, "sats/vB");
-console.log("");
-console.log("Fee Bump Options:");
-console.log("  RBF Possible:", mockAnalysis.canRBF ? "✓" : "✗");
-console.log("  CPFP Possible:", mockAnalysis.canCPFP ? "✓" : "✗");
-console.log("  Recommended:", mockAnalysis.recommendedStrategy);`}
-                    height="400px"
-                />
-
-                <h3 className="text-xl font-bold mb-4 mt-8 text-text-primary">Building a Transaction Template</h3>
-                <CodePlayground
-                    title="BtcTransactionTemplate"
-                    initialCode={`// Building a transaction with BtcTransactionTemplate
-// This demonstrates the template-based approach
-
-const template = {
-  inputs: [],
-  outputs: [],
-  targetFeeRate: 5, // sats/vB
-  dustThreshold: 546,
-  network: "mainnet",
-  scriptType: "P2WSH",
+// Create a new transaction template
+const template = new BtcTransactionTemplate({
+  network: 'mainnet',
+  scriptType: 'P2WSH',
   requiredSigners: 2,
   totalSigners: 3
-};
+});
 
-// Add an input
-const input = {
-  txid: "abc123def456...",
+// Add inputs (UTXOs you're spending)
+template.addInput({
+  txid: 'abc123...def456',
   vout: 0,
-  amountSats: "100000" // 0.001 BTC
-};
-template.inputs.push(input);
-console.log("Added input:", input.amountSats, "sats");
+  amountSats: '100000',
+  address: 'bc1q...',
+  witnessScript: '...'
+});
+
+template.addInput({
+  txid: 'def456...abc123',
+  vout: 1,
+  amountSats: '50000',
+  address: 'bc1q...',
+  witnessScript: '...'
+});
 
 // Add recipient output
-const recipientOutput = {
-  address: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
-  amountSats: "80000",
-  type: "EXTERNAL"
+template.addOutput({
+  address: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
+  amountSats: '120000'
+});
+
+// Set fee rate and adjust change
+template.setFeeRate(5); // 5 sats/vB
+template.adjustChangeOutput({
+  changeAddress: 'bc1q_your_change_address',
+  dustThreshold: 546
+});
+
+// Validate the transaction
+const validation = template.validate();
+console.log('Valid:', validation.valid);
+console.log('Total Fee:', validation.fee);
+
+// Convert to PSBT
+const psbt = template.toPsbt();
+console.log('PSBT created:', psbt.toBase64());`}
+                            height="500px"
+                        />
+                    </div>
+
+                    <div>
+                        <h3 className="text-xl font-bold mb-4 text-text-primary">Creating an RBF Transaction</h3>
+                        <CodePlayground
+                            title="RBF Example"
+                            initialCode={`import { createAcceleratedRbfTransaction } from '@caravan/fees';
+
+// Your original stuck transaction
+const originalTx = {
+  txid: 'original_tx_id',
+  inputs: [...],
+  outputs: [...],
+  feeRate: 1 // Too low!
 };
-template.outputs.push(recipientOutput);
-console.log("Added recipient:", recipientOutput.amountSats, "sats");
 
-// Calculate change
-const totalIn = BigInt(100000);
-const totalOut = BigInt(80000);
-const estimatedFee = BigInt(5 * 140); // fee_rate * estimated_size
-const change = totalIn - totalOut - estimatedFee;
+// Create RBF replacement with higher fee
+const rbfTx = createAcceleratedRbfTransaction({
+  originalTransaction: originalTx,
+  newFeeRate: 10, // Much higher!
+  // Keep same outputs (accelerate)
+  // Or modify outputs (cancel/modify)
+});
 
-console.log("");
-console.log("Transaction Summary:");
-console.log("  Total In:", totalIn.toString(), "sats");
-console.log("  Total Out:", totalOut.toString(), "sats");
-console.log("  Fee:", estimatedFee.toString(), "sats");
-console.log("  Change:", change.toString(), "sats");
+console.log('New fee rate:', rbfTx.feeRate);
+console.log('Additional fee needed:', rbfTx.additionalFee);
 
-// Add change output
-const changeOutput = {
-  address: "bc1q_change_address...",
-  amountSats: change.toString(),
-  type: "CHANGE"
+// The replacement will:
+// 1. Use same inputs as original
+// 2. Have higher fee
+// 3. Signal RBF (sequence < 0xfffffffe)
+// 4. Meet BIP125 rules`}
+                            height="400px"
+                        />
+                    </div>
+
+                    <div>
+                        <h3 className="text-xl font-bold mb-4 text-text-primary">Creating a CPFP Transaction</h3>
+                        <CodePlayground
+                            title="CPFP Example"
+                            initialCode={`import { createCPFPTransaction } from '@caravan/fees';
+
+// Parent transaction that's stuck
+const parentTx = {
+  txid: 'parent_tx_id',
+  outputs: [{
+    vout: 0,
+    amountSats: '50000',
+    address: 'bc1q_your_address' // You control this
+  }]
 };
-template.outputs.push(changeOutput);
 
-console.log("");
-console.log("✓ Transaction template ready for PSBT conversion!");`}
-                    height="500px"
-                />
+// Create child that pays for both
+const cpfpTx = createCPFPTransaction({
+  parentTransaction: parentTx,
+  parentVout: 0, // Spend this output
+  parentFee: 200, // Parent's fee in sats
+  parentSize: 200, // Parent's size in vB
+  
+  targetFeeRate: 20, // Target for package
+  
+  // Child transaction details
+  recipientAddress: 'bc1q_final_destination',
+  changeAddress: 'bc1q_your_change'
+});
+
+// The child fee is calculated to achieve target
+// package fee rate for parent + child combined
+console.log('Child fee:', cpfpTx.fee);
+console.log('Package fee rate:', cpfpTx.packageFeeRate);
+
+// Formula: child_fee = (target_rate × total_size) - parent_fee`}
+                            height="450px"
+                        />
+                    </div>
+                </div>
             </motion.section>
 
             {/* Package API Reference */}
@@ -518,28 +395,6 @@ console.log("✓ Transaction template ready for PSBT conversion!");`}
                         <CardHeader>
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-lg bg-pkg-fees/10 flex items-center justify-center">
-                                    <Eye className="text-pkg-fees" size={20} />
-                                </div>
-                                <div>
-                                    <CardTitle className="text-lg">TransactionAnalyzer</CardTitle>
-                                    <CardDescription>Analyze existing transactions</CardDescription>
-                                </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-2 text-sm">
-                                <div className="p-2 bg-bg-tertiary rounded font-mono text-xs">analyze()</div>
-                                <div className="p-2 bg-bg-tertiary rounded font-mono text-xs">getInputs()</div>
-                                <div className="p-2 bg-bg-tertiary rounded font-mono text-xs">getOutputs()</div>
-                                <div className="p-2 bg-bg-tertiary rounded font-mono text-xs">canRBF / canCPFP</div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="bg-bg-secondary border-border hover:border-pkg-fees/50 transition-all">
-                        <CardHeader>
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-pkg-fees/10 flex items-center justify-center">
                                     <Layers className="text-pkg-fees" size={20} />
                                 </div>
                                 <div>
@@ -550,7 +405,9 @@ console.log("✓ Transaction template ready for PSBT conversion!");`}
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-2 text-sm">
-                                <div className="p-2 bg-bg-tertiary rounded font-mono text-xs">addInput() / addOutput()</div>
+                                <div className="p-2 bg-bg-tertiary rounded font-mono text-xs">addInput(input)</div>
+                                <div className="p-2 bg-bg-tertiary rounded font-mono text-xs">addOutput(output)</div>
+                                <div className="p-2 bg-bg-tertiary rounded font-mono text-xs">setFeeRate(rate)</div>
                                 <div className="p-2 bg-bg-tertiary rounded font-mono text-xs">adjustChangeOutput()</div>
                                 <div className="p-2 bg-bg-tertiary rounded font-mono text-xs">validate()</div>
                                 <div className="p-2 bg-bg-tertiary rounded font-mono text-xs">toPsbt()</div>
@@ -574,6 +431,8 @@ console.log("✓ Transaction template ready for PSBT conversion!");`}
                             <div className="space-y-2 text-sm">
                                 <div className="p-2 bg-bg-tertiary rounded font-mono text-xs">createAcceleratedRbfTransaction()</div>
                                 <div className="p-2 bg-bg-tertiary rounded font-mono text-xs">createCancelRbfTransaction()</div>
+                                <div className="p-2 bg-bg-tertiary rounded font-mono text-xs">createModifyRbfTransaction()</div>
+                                <div className="p-2 bg-bg-tertiary rounded font-mono text-xs">validateRbfRules()</div>
                             </div>
                         </CardContent>
                     </Card>
@@ -593,6 +452,29 @@ console.log("✓ Transaction template ready for PSBT conversion!");`}
                         <CardContent>
                             <div className="space-y-2 text-sm">
                                 <div className="p-2 bg-bg-tertiary rounded font-mono text-xs">createCPFPTransaction()</div>
+                                <div className="p-2 bg-bg-tertiary rounded font-mono text-xs">calculateChildFee()</div>
+                                <div className="p-2 bg-bg-tertiary rounded font-mono text-xs">calculatePackageFeeRate()</div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="bg-bg-secondary border-border hover:border-blue-500/50 transition-all">
+                        <CardHeader>
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                                    <Eye className="text-blue-500" size={20} />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-lg">Analysis Functions</CardTitle>
+                                    <CardDescription>Transaction analysis utilities</CardDescription>
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-2 text-sm">
+                                <div className="p-2 bg-bg-tertiary rounded font-mono text-xs">analyzTransaction()</div>
+                                <div className="p-2 bg-bg-tertiary rounded font-mono text-xs">estimateTransactionSize()</div>
+                                <div className="p-2 bg-bg-tertiary rounded font-mono text-xs">checkRbfSignaling()</div>
                             </div>
                         </CardContent>
                     </Card>
